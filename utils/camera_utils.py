@@ -21,9 +21,9 @@ class Camera(nn.Module):
     ):
         super(Camera, self).__init__()
         self.uid = uid
-        self.device = device
+        self.device = device if torch.cuda.is_available() else "cpu"
 
-        T = torch.eye(4, device=device)
+        T = torch.eye(4, device=self.device)
         self.R = T[:3, :3]
         self.T = T[:3, 3]
         self.R_gt = gt_T[:3, :3]
@@ -43,20 +43,24 @@ class Camera(nn.Module):
         self.image_width = image_width
 
         self.cam_rot_delta = nn.Parameter(
-            torch.zeros(3, requires_grad=True, device=device)
+            torch.zeros(3, requires_grad=True, device=self.device)
         )
         self.cam_trans_delta = nn.Parameter(
-            torch.zeros(3, requires_grad=True, device=device)
+            torch.zeros(3, requires_grad=True, device=self.device)
         )
 
         self.exposure_a = nn.Parameter(
-            torch.tensor([0.0], requires_grad=True, device=device)
+            torch.tensor([0.0], requires_grad=True, device=self.device)
         )
         self.exposure_b = nn.Parameter(
-            torch.tensor([0.0], requires_grad=True, device=device)
+            torch.tensor([0.0], requires_grad=True, device=self.device)
         )
 
-        self.projection_matrix = projection_matrix.to(device=device)
+        self.projection_matrix = projection_matrix.to(device=self.device)
+
+    def update_RT(self, R, T):
+        self.R = R.to(self.device)
+        self.T = T.to(self.device)
 
     @staticmethod
     def init_from_dataset(dataset, idx, projection_matrix):

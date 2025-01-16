@@ -163,3 +163,4 @@ class Config:
     def __init__(self):
         self.dataset = DatasetConfig()
         self.model_params = ModelParams()
+        self.training = Training()
